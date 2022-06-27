@@ -1,0 +1,6 @@
+version: 1.0
+
+constraints:
+  - ios-*,master > development
+  - development > testflight
+  - testflight,hotfix-* > master
