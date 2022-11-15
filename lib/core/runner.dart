@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:args/command_runner.dart';
 import 'package:merge_control_cli/core/cli_helper.dart';
 
@@ -19,6 +20,12 @@ class MergeControlRunner extends CommandRunner {
       CliHelper.toOption,
       abbr: 't',
       help: 'Destination branch',
+    );
+
+    argParser.addOption(
+      CliHelper.presetOption,
+      abbr: 's',
+      help: 'Preset from environment variables',
     );
 
     argParser.addOption(
@@ -43,8 +50,26 @@ class MergeControlRunner extends CommandRunner {
   Future run(Iterable<String> args) async {
     final results = parse(args);
 
-    final from = results.wasParsed('from') ? results['from'] : null;
-    final to = results.wasParsed('to') ? results['to'] : null;
+    final String? preset = results.wasParsed(CliHelper.presetOption)
+        ? results[CliHelper.presetOption]
+        : null;
+
+    String? from, to;
+
+    if (preset != null) {
+      final env = Platform.environment;
+      switch (preset.toLowerCase()) {
+        case 'gitlab':
+          from = env['CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'];
+          to = env['CI_MERGE_REQUEST_TARGET_BRANCH_NAME'];
+          break;
+
+        default:
+          from = results.parsed(CliHelper.fromOption);
+          to = results.parsed(CliHelper.toOption);
+          break;
+      }
+    }
 
     if (from != null && to != null) {
       final projectDir = CliHelper.projectDir(
@@ -61,9 +86,13 @@ class MergeControlRunner extends CommandRunner {
         }
         print('Access denied');
         exit(1);
-      } else {}
+      }
     }
 
     super.run(args);
   }
+}
+
+extension ParsedArg on ArgResults {
+  String? parsed(String key) => wasParsed(key) ? this[key] : null;
 }

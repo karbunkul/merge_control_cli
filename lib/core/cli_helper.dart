@@ -9,6 +9,7 @@ class CliHelper {
   static const String projectDirOption = 'project-dir';
   static const String fromOption = 'from';
   static const String toOption = 'to';
+  static const String presetOption = 'preset';
   static const String verboseFlag = 'verbose';
 
   static String projectDir([String? dir]) {
